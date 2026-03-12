@@ -852,7 +852,7 @@ customElements.whenDefined('horizontal-gauge-card').then(() => {
             min: 0,
             max: 100,
             needle: true,
-            show_segment_labels: true,
+            show_segment_labels: false,
             segment_label_position: 'below',
             value_label_position: 'above',
             segments: [
