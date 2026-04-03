@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Preview Linear Gauge</title>
+    <style>
+        body { background: #111111; color: white; font-family: sans-serif; padding: 40px; }
+        /* Simula la colonna della dashboard di HA */
+        .container { width: 500px; margin: 0 auto; }
+        h2 { color: #03a9f4; font-size: 14px; text-transform: uppercase; }
+    </style>
+    
+    <script type="module" src="./linear-gauge-card.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Anteprima Card</h2>
+        <linear-gauge-card id="preview"></linear-gauge-card>
+    </div>
+
+    <script>
+        // Aspettiamo che l'elemento sia definito
+        customElements.whenDefined('linear-gauge-card').then(() => {
+            const card = document.getElementById('preview');
+            
+            // 1. Configurazione (metti qui i tuoi parametri)
+            card.setConfig({
+                entity: "sensor.test",
+                name: "Livello Batteria",
+                show_icon: true,
+                gradient: true,
+                show_icon_right: true, // La tua nuova funzione
+                icon_right: "mdi:battery-90",
+                show_value_labels: true,
+                min: 0,
+                max: 200,
+                segments: [
+                    { value: 20, color: "red" },
+                    { value: 100, color: "green" }
+                ]
+            });
+
+            // 2. Simulazione dati di Home Assistant
+            card.hass = {
+                states: {
+                    "sensor.test": {
+                        state: "85",
+                        attributes: { 
+                            unit_of_measurement: "W",
+                            friendly_name: "Batteria iPhone",
+                            icon: "mdi:cellphone"
+                        }
+                    }
+                }
+            };
+        });
+    </script>
+</body>
+</html>

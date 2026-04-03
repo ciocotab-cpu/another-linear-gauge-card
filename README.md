@@ -1,11 +1,22 @@
 # Linear Gauge Card
 
+This project is a fork of the project https://github.com/iljanev/ha-horizontal-gauge-card
 A highly customizable linear gauge card with a needle indicator for Home Assistant.
 Inspired by Home Assistant Tile card.
 
 ![Linear Gauge Card Examples](image.png)
 
-## Features
+## My New Features
+- Transition between segment color can be smooth
+- Added icon on the rigth
+- Can Change Icon color
+- The bar total refere to indicated value and not the sum of the segment
+Next
+- altezza modificabile impostata ad 1
+- pulsazione needle
+- pulsazione scheda
+
+## Original Features
 - With minimalistic settings occupies only 1 row 
 - Fully visual editor support (no YAML required!)
 - Custom segments with color coding

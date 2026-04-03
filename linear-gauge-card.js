@@ -32,13 +32,19 @@ class LinearGaugeCard extends HTMLElement {
         min: 0,
         max: 100,
         show_icon: true,
+        show_icon_right: false,
+        icon_right: null,
         show_name: true,
         show_value: true,
+        gradient: false,
         show_segment_labels: false,
         show_value_labels: false,
         needle: true,
+        needle_pulse: true,
         needle_width: 2,
         needle_color: '#ffffff',
+        icon_left_color: '#ffffff',
+        icon_right_color: '#ffffff',
         needle_shadow: true,
         show_needle_label: false,
         decimals: 1,
@@ -74,7 +80,8 @@ class LinearGaugeCard extends HTMLElement {
     if (!hasHeader) {
       this._display_rows = 1; 
     } else {
-      this._display_rows = hasLabels ? 2 : 1;
+      //this._display_rows = hasLabels ? 2 : 1;
+      this._display_rows = 1; 
     }
 
     this._rendered = false;
@@ -133,7 +140,7 @@ class LinearGaugeCard extends HTMLElement {
     return null;
   }
 
-  _resolveSegmentsAndMax(min, configMax) {
+_resolveSegmentsAndMax(min, configMax) {
     const segmentsCfg = this._config.segments || [];
 
     if (!segmentsCfg.length) {
@@ -164,8 +171,10 @@ class LinearGaugeCard extends HTMLElement {
       currentFrom = endVal;
     }
 
-    const computedMax = segments[segments.length - 1].to;
-    return { max: computedMax, segments };
+    // MODIFICA QUI: Non sovrascrivere più configMax con l'ultimo segmento
+    // Se l'ultimo segmento finisce prima del max configurato, 
+    // il calcolo della percentuale userà comunque configMax.
+    return { max: configMax, segments };
   }
 
   _handleAction(ev) {
@@ -214,7 +223,11 @@ class LinearGaugeCard extends HTMLElement {
     const labelSize = this._config.label_font_size ? `${this._config.label_font_size}px` : 'var(--ha-font-size-sm, 10px)';
 
     // Enforce 2 rows max (56px or 120px)
-    const minHeight = this._display_rows === 1 ? '56px' : '120px';
+    //const minHeight = this._display_rows === 1 ? '56px' : '120px';
+    let minHeight = '56px'; // Altezza base (Tile standard)
+    if (this._config.show_value_labels) {
+        minHeight = '64px'; // Aumento leggero solo per far stare i numeri
+    }
 
     const cardStyle = `
       :host {
@@ -246,11 +259,23 @@ class LinearGaugeCard extends HTMLElement {
       .card-content {
         display: flex;
         flex-direction: row;
-        align-items: center;
+        align-items: flex-start;
+        padding-top: 0px;
         width: 100%;
         height: 100%;
-        padding: 0;
+        padding: 0 6px;
       }
+
+      .icon { 
+        margin-right: 12px; 
+        color: ${this._config.icon_left_color || '#ffffff'};
+      }
+
+      .icon-right { 
+        margin-left: 12px;
+        color: ${this._config.icon_right_color || '#ffffff'};
+      }
+
       .icon-container {
         display: flex;
         align-items: center;
@@ -324,6 +349,7 @@ class LinearGaugeCard extends HTMLElement {
       }
       .segment {
         height: 100%;
+        width: 100%;
         flex-shrink: 0;
       }
       .needle {
@@ -390,6 +416,20 @@ class LinearGaugeCard extends HTMLElement {
       }
     `;
 
+    if (this._config.needle_pulse) {
+      const el = document.getElementById('needle');
+
+      const pulseAnimation = el.animate([
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(1.2)', opacity: 0.7 },
+        { transform: 'scale(1)', opacity: 1 }
+      ], {
+        duration: 1000,
+        iterations: Infinity,
+        easing: 'ease-in-out'
+      });
+    }
+    
     const icon = this._config.icon || (entity && entity.attributes && entity.attributes.icon);
     let iconTemplate = '';
 
@@ -398,6 +438,17 @@ class LinearGaugeCard extends HTMLElement {
         iconTemplate = `<div class="icon-container"><ha-icon class="icon" icon="${icon}"></ha-icon></div>`;
       } else {
         iconTemplate = `<div class="icon-container"><ha-state-icon class="icon" id="state-icon"></ha-state-icon></div>`;
+      }
+    }
+
+  const iconRight = this._config.icon_right || (entity && entity.attributes && entity.attributes.icon);
+    let iconRightTemplate = '';
+
+    if (this._config.show_icon_right) {
+      if (this._config.icon_right) { // Se l'utente ha scelto un'icona specifica nell'editor
+        iconRightTemplate = `<div class="icon-container icon-right"><ha-icon class="icon" icon="${this._config.icon_right}"></ha-icon></div>`;
+      } else { // Altrimenti usa l'icona dinamica dello stato
+        iconRightTemplate = `<div class="icon-container icon-right"><ha-state-icon class="icon" id="state-icon-right"></ha-state-icon></div>`;
       }
     }
 
@@ -441,12 +492,26 @@ class LinearGaugeCard extends HTMLElement {
       if (bottomContent) labelsBottomHTML = `<div class="labels-container-bottom">${bottomContent}</div>`;
     }
 
-    const totalSpan = max - min || 1;
-    const segmentElements = segments.map((seg) => {
-      const span = seg.to - seg.from;
-      const flexValue = span / totalSpan;
-      return `<div class="segment" style="flex: ${flexValue}; background: ${seg.color};"></div>`;
-    }).join('');
+    let segmentElements = '';
+
+    if (this._config.gradient) {
+      // LOGICA GRADIENTE
+      const gradientStops = segments.map((seg) => {
+        const pctFrom = this._valueToPercent(seg.from, min, max);
+        const pctTo = this._valueToPercent(seg.to, min, max);
+        return `${seg.color} ${this._valueToPercent((seg.from + seg.to) / 2, min, max)}%`;
+      }).join(', ');
+
+      segmentElements = `<div class="segment" style="width: 100%; background: linear-gradient(90deg, ${gradientStops});"></div>`;
+    } else {
+      // LOGICA ORIGINALE (Blocchi netti)
+      const totalSpan = max - min || 1;
+      segmentElements = segments.map((seg) => {
+        const span = Math.max(0, Math.min(seg.to, max) - Math.min(seg.from, max));
+        const flexValue = span / totalSpan;
+        return `<div class="segment" style="flex: ${flexValue}; background: ${seg.color};"></div>`;
+      }).join('');
+    }
 
     const gaugeAndNeedleHTML = `
       <div class="gauge-container">
@@ -483,6 +548,7 @@ class LinearGaugeCard extends HTMLElement {
             ${mainContent}
             <div class="unavailable" id="unavailable-text">Unavailable</div>
           </div>
+		  ${iconRightTemplate}
         </div>
       </ha-card>
     `;
@@ -609,17 +675,9 @@ const SCHEMA = [
     name: "",
     schema: [
       { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "show_name", selector: { boolean: {} } },
       { name: "min", selector: { number: { mode: "box", step: 1 } } },
       { name: "max", selector: { number: { mode: "box", step: 1 } } },
-    ]
-  },
-  {
-    type: "grid",
-    name: "",
-    schema: [
-      { name: "show_name", selector: { boolean: {} } },
-      { name: "show_icon", selector: { boolean: {} } },
       { name: "show_value", selector: { boolean: {} } },
       { name: "decimals", selector: { number: { mode: "box", min: 0, max: 5, step: 1 } } },
     ]
@@ -627,6 +685,25 @@ const SCHEMA = [
   {
     name: "unit",
     selector: { text: {} }
+  },
+  {
+    title: "Icons",
+    name: "",
+    type: "expandable",
+    schema: [
+      {
+        type: "grid",
+        name: "",
+        schema: [
+          { name: "show_icon", selector: { boolean: {} } },
+          { name: "show_icon_right", selector: { boolean: {} } },
+          { name: "icon", selector: { icon: {} } },
+          { name: "icon_right", selector: { icon: {} } },
+          { name: "icon_left_color", selector: { text: {} } }, // Added color text input
+          { name: "icon_right_color", selector: { text: {} } }, // Added color text input
+        ]
+      }
+    ]
   },
   {
     title: "Appearance Overrides",
@@ -655,6 +732,7 @@ const SCHEMA = [
         name: "",
         schema: [
           { name: "needle", selector: { boolean: {} } },
+          { name: "needle_pulse", selector: { boolean: {} } },
           { name: "needle_shadow", selector: { boolean: {} } },
           { name: "needle_width", selector: { number: { mode: "box", min: 1, max: 20, step: 1 } } },
           { name: "needle_color", selector: { text: {} } }, // Added color text input
@@ -716,6 +794,7 @@ const SCHEMA = [
     name: "", 
     type: "expandable",
     schema: [
+      { name: "gradient", selector: { boolean: {} } },
       {
         name: "segments",
         selector: {
@@ -791,11 +870,14 @@ class LinearGaugeCardEditor extends HTMLElement {
     const customLabels = {
       entity: "Entity",
       name: "Name",
-      icon: "Icon",
+      icon: "Icon Left",
+      icon_right: "Icon Right",
       min: "Minimum Value",
       max: "Maximum Value",
+      gradient: "Soft Transitions",
       show_name: "Show Name",
-      show_icon: "Show Icon",
+      show_icon: "Show Left Icon",
+      show_icon_right: "Show Right Icon",
       show_value: "Show Value",
       decimals: "Decimals",
       unit: "Unit Override",
@@ -804,8 +886,11 @@ class LinearGaugeCardEditor extends HTMLElement {
       label_font_size: "Label Font Size (px)",
       gauge_thickness: "Gauge Bar Height (px)",
       needle: "Show Needle",
+      needle_pulse: "Pulse Needle",
       needle_width: "Needle Width (px)",
       needle_color: "Needle Color (HEX or Var)",
+      icon_left_color: "Needle Color (HEX or Var)",
+      icon_right_color: "Needle Color (HEX or Var)",
       show_needle_label: "Show Needle Label",
       needle_shadow: "Needle Shadow",
       needle_label_position: "Needle Label Position",
@@ -833,7 +918,7 @@ const cardIndex = window.customCards.findIndex(c => c.type === "linear-gauge-car
 if (cardIndex === -1) {
   window.customCards.push({
     type: 'linear-gauge-card',
-    name: 'linear Gauge Card',
+    name: 'Linear Gauge Card',
     description: 'A linear gauge bar with needle indicator',
     preview: false,
   });
