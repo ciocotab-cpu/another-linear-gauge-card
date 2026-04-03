@@ -13,7 +13,7 @@ Inspired by Home Assistant Tile card.
 - The bar total refere to indicated value and not the sum of the segment
 Next
 - altezza modificabile impostata ad 1
-- pulsazione needle
+- pulsazione needle 
 - pulsazione scheda
 
 ## Original Features
