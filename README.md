@@ -5,7 +5,8 @@ A highly customizable linear gauge card with a needle indicator for Home Assista
 Inspired by Home Assistant Tile card.
 
 
-![Another Linear Gauge Card Examples](new.webm)
+![Another Linear Gauge Card Examples]
+https://github.com/user-attachments/assets/f0aa6aaf-ce06-42df-a9d8-24326d38c8bc
 ## My New Features
 - Transition between segment color can be smooth
 - Added icon on the rigth
