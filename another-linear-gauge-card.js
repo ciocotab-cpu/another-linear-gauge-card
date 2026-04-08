@@ -31,6 +31,8 @@ class AnotherLinearGaugeCard extends HTMLElement {
       {
         min: 0,
         max: 100,
+        card_pulse: true,
+        card_pulse_msec: 5000,
         show_icon_left: true,
         double_line: false,
         show_icon_right: false,
@@ -42,6 +44,7 @@ class AnotherLinearGaugeCard extends HTMLElement {
         show_value_labels: false,
         needle: true,
         needle_pulse: true,
+        needle_pulse_msec: 5000,
         needle_width: 20,
         needle_color: '#ffffff',
         icon_left_color: '#0000ff',
@@ -633,17 +636,20 @@ _resolveSegmentsAndMax(min, configMax) {
         this._elements.needleValue.style.left = `${pctClamped}%`;
         this._elements.needleValue.textContent = displayString;
       }
-        const needleEl = this.shadowRoot.querySelector('#needle');
 
-      if (needleEl) {
+      const needlepulse = this._config.needle_pulse && !isNaN(value);
+      if (needlepulse) {
           // Usiamo filter invece di transform per non interferire con il 'left'
-          needleEl.animate([
-            { transform: 'scale(1)', transformOrigin: 'center', offset: 0 },
-            { transform: 'scale(1.2)', transformOrigin: 'center', offset: 0.08 },
-            { transform: 'scale(1)', transformOrigin: 'center', offset: 0.16 },
-            { transform: 'scale(1)', transformOrigin: 'center', offset: 1 }
+          this._elements.needle.animate([
+            // { transform: 'scale(1)', transformOrigin: 'center', offset: 0 },
+            // { transform: 'scale(1.2)', transformOrigin: 'center', offset: 0.08 },
+            // { transform: 'scale(1)', transformOrigin: 'center', offset: 0.16 },
+            // { transform: 'scale(1)', transformOrigin: 'center', offset: 1 }
+              { boxShadow: '0 0 0 0 rgba(255, 255, 0, 1)', offset: 0 },
+              { boxShadow: '0 0 0 15px rgba(255, 255, 0, 0)', offset: 0.7 },
+              { boxShadow: '0 0 0 0 rgba(255, 255, 0, 0)', offset: 1 }
           ], {
-              duration: 6000,
+              duration: this._config.needle_pulse_msec || 5000,
               iterations: Infinity,
               easing: 'ease-in-out'
           });
@@ -653,6 +659,20 @@ _resolveSegmentsAndMax(min, configMax) {
       if (this._elements.needle) this._elements.needle.style.display = 'none';
       if (this._elements.needleValue) this._elements.needleValue.style.display = 'none';
     }
+
+    const cardpulse = this._config.card_pulse && !isNaN(value);
+    //this._elements.card
+    if (cardpulse) {
+          this._elements.card.animate([
+            { boxShadow: '0 0 0 0 rgba(255, 255, 0, 1)', offset: 0 },
+            { boxShadow: '0 0 0 15px rgba(255, 255, 0, 0)', offset: 0.7 },
+            { boxShadow: '0 0 0 0 rgba(255, 255, 0, 0)', offset: 1 }
+          ], {
+            duration: this._config.card_pulse_msec || 5000,
+            iterations: Infinity,
+            easing: 'ease-in-out'
+          });
+        }
   }
 }
 
@@ -687,11 +707,12 @@ const SCHEMA = [
     schema: [
       { name: "name", selector: { text: {} } },
       { name: "show_name", selector: { boolean: {} } },
-      { name: "double_line", selector: { boolean: {} } },
       { name: "min", selector: { number: { mode: "box", step: 1 } } },
       { name: "max", selector: { number: { mode: "box", step: 1 } } },
+      { name: "double_line", selector: { boolean: {} } },
       { name: "show_value", selector: { boolean: {} } },
-      { name: "decimals", selector: { number: { mode: "box", min: 0, max: 5, step: 1 } } },
+      { name: "card_pulse", selector: { boolean: {} } },
+      { name: "card_pulse_msec", selector: { number: { mode: "box", min: 0, max: 30000, step: 100 } } },
     ]
   },
   {
@@ -744,9 +765,10 @@ const SCHEMA = [
         name: "",
         schema: [
           { name: "needle", selector: { boolean: {} } },
-          { name: "needle_pulse", selector: { boolean: {} } },
-          { name: "needle_shadow", selector: { boolean: {} } },
           { name: "needle_width", selector: { number: { mode: "box", min: 1, max: 20, step: 1 } } },
+          { name: "needle_pulse", selector: { boolean: {} } },
+          { name: "needle_pulse_msec", selector: { number: { mode: "box", min: 0, max: 30000, step: 100 } } },
+          { name: "needle_shadow", selector: { boolean: {} } },
           { name: "needle_color", selector: { text: {} } }, // Added color text input
           { name: "show_needle_label", selector: { boolean: {} } },
           { 
@@ -883,6 +905,8 @@ class AnotherLinearGaugeCardEditor extends HTMLElement {
       entity: "Entity",
       double_line: "Double Line",
       name: "Name",
+      card_pulse: "Pulse Card",
+      card_pulse_msec: "Pulse mSec",
       icon_left: "Icon Left",
       icon_right: "Icon Right",
       min: "Minimum Value",
@@ -900,6 +924,7 @@ class AnotherLinearGaugeCardEditor extends HTMLElement {
       gauge_thickness: "Gauge Bar Height (px)",
       needle: "Show Needle",
       needle_pulse: "Pulse Needle",
+      needle_pulse_msec: "Pulse mSec",
       needle_width: "Needle Width (px)",
       needle_color: "Needle Color (HEX or Var)",
       icon_left_color: "Needle Color (HEX or Var)",
