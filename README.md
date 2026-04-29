@@ -15,11 +15,6 @@ Inspired by Home Assistant Tile card.
   
 ![Another Linear Gauge Card Examples](new.gif)
 
-<<<<<<< HEAD
-![Another Linear Gauge Card Examples](new.gif)
-
-=======
->>>>>>> b8d918441a5f093e6acb7f899d0a6a5640f33f4f
 ## Original Features
 - With minimalistic settings occupies only 1 row 
 - Fully visual editor support (no YAML required!)
