@@ -8,7 +8,7 @@ Inspired by Home Assistant Tile card.
 - Transition between segment color can be smooth
 - Added icon on the rigth
 - Can Change Icon color
-- The bar total refere to indicated value and not the sum of the segments
+- The bar total refers to indicated value and not the sum of the segments
 - Enable Needle Pulse and set pulse frequency (in msec)
 - Enable Card Pulse and set pulse frequency (in msec)
 - Set single/double line vertical dimension
