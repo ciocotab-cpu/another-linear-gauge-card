@@ -8,18 +8,13 @@ Inspired by Home Assistant Tile card.
 - Transition between segment color can be smooth
 - Added icon on the rigth
 - Can Change Icon color
-- The bar total refere to indicated value and not the sum of the segments
+- The bar total refers to indicated value and not the sum of the segments
 - Enable Needle Pulse and set pulse frequency (in msec)
 - Enable Card Pulse and set pulse frequency (in msec)
 - Set single/double line vertical dimension
   
 ![Another Linear Gauge Card Examples](new.gif)
 
-<<<<<<< HEAD
-![Another Linear Gauge Card Examples](new.gif)
-
-=======
->>>>>>> b8d918441a5f093e6acb7f899d0a6a5640f33f4f
 ## Original Features
 - With minimalistic settings occupies only 1 row 
 - Fully visual editor support (no YAML required!)
